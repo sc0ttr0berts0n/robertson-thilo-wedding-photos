@@ -14,6 +14,7 @@ const client = createClient({
 // Zod schema definitions
 const photoSchema = z.object({
     _createdAt: z.string(),
+    show: z.boolean().optional().nullable(),
     photo: z.object({
         asset: z.object({
             metadata: z.object({
@@ -33,7 +34,7 @@ const photoQuerySchema = z.array(photoSchema);
 export type PhotoQuerySchema = z.infer<typeof photoQuerySchema>;
 
 const photosQuery = `
-*[_type == "photo_upload"]{
+*[_type == "photo_upload" && show != false]{
   photo{
     caption,
     attribution,
@@ -53,7 +54,7 @@ const photosQuery = `
 
 const getPhotoById = (id: string) => {
     return `
-   *[_type == "photo_upload" && _id=="${id}"]{
+   *[_type == "photo_upload" && show != false && _id=="${id}"]{
      photo{
        caption,
        attribution,

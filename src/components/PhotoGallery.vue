@@ -20,7 +20,8 @@ const status = computed(() => {
 
 <template>
     <section>
-        <h2>Gallery {{ status }}</h2>
+        <h2>Gallery</h2>
+        <div class="status">{{ status }}</div>
         <div class="photos">
             <button
                 @click="onImageClick(photo.photo.asset.url)"
@@ -55,5 +56,11 @@ const status = computed(() => {
     width: calc(25cqw - 3 * 0.25rem);
     height: calc(25cqw - 3 * 0.25rem);
     cursor: pointer;
+}
+
+.status {
+    font-family: monospace;
+    text-align-last: left;
+    white-space: pre;
 }
 </style>
