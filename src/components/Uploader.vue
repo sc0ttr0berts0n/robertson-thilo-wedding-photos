@@ -161,18 +161,6 @@ const resizeImageToMaxSize = async (file: File): Promise<File> => {
         reader.readAsDataURL(file);
     });
 };
-
-// Usage Example
-const handleFileUpload = async (file: File) => {
-    const compressedFile = await resizeImageToMaxSize(file);
-    if (compressedFile) {
-        console.log(`Original size: ${file.size} bytes`);
-        console.log(`Compressed size: ${compressedFile.size} bytes`);
-        // Now you can proceed with uploading the compressedFile
-    } else {
-        console.error('Failed to compress the image.');
-    }
-};
 </script>
 
 <template>
