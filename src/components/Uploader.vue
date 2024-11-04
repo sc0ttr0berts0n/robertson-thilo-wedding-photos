@@ -2,7 +2,9 @@
 import { ref } from 'vue';
 
 const MAX_FILE_SIZE = 5e6; // ~5.72mb
-const uploadedFiles = ref<{ name: string; size: number; preview: any }[]>([]);
+const uploadedFiles = ref<
+    { name: string; size: number; preview: any; success: boolean }[]
+>([]);
 const isDragging = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const error = ref('');
@@ -47,6 +49,7 @@ const addFiles = async (files: FileList) => {
             uploadedFiles.value.push({
                 name: bestFile.name,
                 size: bestFile.size,
+                success: false,
                 preview: e.target?.result, // Set the preview to the file reader result
             });
         };
@@ -83,6 +86,14 @@ const uploadFileToSanity = async (file: File) => {
 
         const result = await response.json();
         console.log('Uploaded asset:', result);
+
+        const fileInList = uploadedFiles.value.find(
+            (el) => el.name === file.name
+        );
+        if (fileInList) {
+            fileInList.success =
+                result.message === 'Image uploaded successfully';
+        }
     };
 
     const bestFile = (await resizeImageToMaxSize(file)) ?? file;
@@ -193,7 +204,16 @@ const resizeImageToMaxSize = async (file: File): Promise<File> => {
                 v-for="(file, index) in uploadedFiles"
                 :key="index"
             >
-                <img v-if="file.preview" :src="file.preview" class="preview" />
+                <div class="preview-wrapper">
+                    <img
+                        v-if="file.preview"
+                        :src="file.preview"
+                        class="preview"
+                    />
+                    <div class="preview-status">
+                        {{ file.success ? '✅' : '⏳' }}
+                    </div>
+                </div>
                 <div class="photo-info">
                     <div class="filename">{{ file.name }}</div>
                     <div class="filename">
@@ -237,10 +257,29 @@ button {
     font-size: 1.25rem;
 }
 
+.preview-wrapper {
+    position: relative;
+}
+
 .preview {
+    position: relative;
+    display: block;
     width: 5rem;
     height: 5rem;
     object-fit: cover;
+}
+
+.preview-status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: block;
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    margin: 0.125rem;
+    border-radius: 0.25rem;
+    background-color: rgba(0, 0, 0, 0.8);
+    line-height: 1;
 }
 
 .upload-list {
