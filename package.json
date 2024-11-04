@@ -1,20 +1,28 @@
 {
-  "name": "robertson-thilo-wedding-photos",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "vue": "^3.5.12"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.1.4",
-    "typescript": "~5.6.2",
-    "vite": "^5.4.10",
-    "vue-tsc": "^2.1.8"
-  }
+    "name": "robertson-thilo-wedding-photos",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc -b && vite build",
+        "preview": "vite preview",
+        "dev-netlify": "netlify dev --debug",
+        "generate-types": "npx sanity typegen generate"
+    },
+    "dependencies": {
+        "@netlify/functions": "^2.8.2",
+        "@sanity/client": "^6.22.2",
+        "dotenv": "^16.4.5",
+        "groq": "^3.62.3",
+        "vue": "^3.5.12",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^5.1.4",
+        "netlify-cli": "^17.37.2",
+        "typescript": "~5.6.2",
+        "vite": "^5.4.10",
+        "vue-tsc": "^2.1.8"
+    }
 }

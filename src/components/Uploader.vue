@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const uploadedFiles = ref<{ name: string; preview: any }[]>([]);
+const MAX_FILE_SIZE = 5e6; // ~5.72mb
+const uploadedFiles = ref<{ name: string; size: number; preview: any }[]>([]);
 const isDragging = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
+const error = ref('');
 
 // Handle drag events
 const handleDragEnter = () => {
@@ -35,19 +37,140 @@ const triggerFileInput = () => {
 };
 
 // Add files to the uploadedFiles list
-const addFiles = (files: FileList) => {
+const addFiles = async (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const rawFile = files[i];
+        const bestFile = await resizeImageToMaxSize(rawFile);
         const reader = new FileReader();
 
         reader.onload = (e) => {
             uploadedFiles.value.push({
-                name: file.name,
+                name: bestFile.name,
+                size: bestFile.size,
                 preview: e.target?.result, // Set the preview to the file reader result
             });
         };
 
-        reader.readAsDataURL(file); // Read file as a data URL for the preview
+        reader.readAsDataURL(bestFile); // Read file as a data URL for the preview
+
+        uploadFileToSanity(bestFile);
+    }
+};
+
+const uploadFileToSanity = async (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        const base64String = (e.target?.result as string).split(',')[1]; // Remove the data URL prefix
+
+        if (base64String.length > MAX_FILE_SIZE) {
+            error.value = `File too Large. ${(6e6 / 1024 / 1024).toFixed(
+                2
+            )}mb limit`;
+            return;
+        }
+        // Send a POST request to your Netlify function
+        const response = await fetch('/.netlify/functions/uploadImage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file: base64String,
+                filename: file.name,
+            }),
+        });
+
+        const result = await response.json();
+        console.log('Uploaded asset:', result);
+    };
+
+    const bestFile = (await resizeImageToMaxSize(file)) ?? file;
+    reader.readAsDataURL(bestFile); // Read the file as a data URL
+};
+
+const resizeImageToMaxSize = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+        if (file.size < MAX_FILE_SIZE) {
+            return resolve(file);
+        }
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target?.result as string;
+
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                    reject(null);
+                    return;
+                }
+
+                let { width, height } = img;
+                const maxDimension = 2000; // Maximum width or height to scale down to
+
+                // Scale down the image if it's too large
+                if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                        height = (height * maxDimension) / width;
+                        width = maxDimension;
+                    } else {
+                        width = (width * maxDimension) / height;
+                        height = maxDimension;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress the image to fit within 10 MB
+                let quality = 0.9; // Start with high quality
+                let base64String = canvas.toDataURL('image/jpeg', quality);
+                let fileSize = atob(base64String.split(',')[1]).length;
+
+                // Gradually decrease quality until the file size is below 10 MB
+                while (fileSize > MAX_FILE_SIZE && quality > 0.1) {
+                    quality -= 0.1;
+                    base64String = canvas.toDataURL('image/jpeg', quality);
+                    fileSize = atob(base64String.split(',')[1]).length;
+                }
+
+                // Convert base64 back to a File object
+                const byteString = atob(base64String.split(',')[1]);
+                const mimeString = base64String
+                    .split(',')[0]
+                    .split(':')[1]
+                    .split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+
+                const compressedFile = new File([ab], file.name, {
+                    type: mimeString,
+                });
+                resolve(compressedFile);
+            };
+        };
+
+        reader.readAsDataURL(file);
+    });
+};
+
+// Usage Example
+const handleFileUpload = async (file: File) => {
+    const compressedFile = await resizeImageToMaxSize(file);
+    if (compressedFile) {
+        console.log(`Original size: ${file.size} bytes`);
+        console.log(`Compressed size: ${compressedFile.size} bytes`);
+        // Now you can proceed with uploading the compressedFile
+    } else {
+        console.error('Failed to compress the image.');
     }
 };
 </script>
@@ -76,10 +199,22 @@ const addFiles = (files: FileList) => {
             hidden
         />
         <p v-if="uploadedFiles.length > 0">Uploads:</p>
-        <ul>
-            <li v-for="(file, index) in uploadedFiles" :key="index">
+        <ul class="upload-list">
+            <li
+                class="list-item"
+                v-for="(file, index) in uploadedFiles"
+                :key="index"
+            >
                 <img v-if="file.preview" :src="file.preview" class="preview" />
-                <div class="filename">{{ file.name }}</div>
+                <div class="photo-info">
+                    <div class="filename">{{ file.name }}</div>
+                    <div class="filename">
+                        {{ (file.size / 1024 / 1024).toFixed(2) }}mb
+                    </div>
+                    <div v-if="error" class="filename">
+                        {{ error }}
+                    </div>
+                </div>
             </li>
         </ul>
     </div>
@@ -115,18 +250,19 @@ button {
 }
 
 .preview {
-    width: 3rem;
-    height: 3rem;
+    width: 5rem;
+    height: 5rem;
     object-fit: cover;
 }
 
-ul {
+.upload-list {
     margin: 0;
     padding: 0;
 }
 
-li {
+.list-item {
     display: flex;
+    align-items: center;
     background-color: rgba(129, 193, 167, 0.1);
     margin: 0.25rem;
     border-radius: 0.5rem;
@@ -136,10 +272,10 @@ li {
 }
 
 .filename {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.5rem;
     word-break: break-all;
+}
+.photo-info {
+    padding: 0.5rem;
+    text-align: left;
 }
 </style>

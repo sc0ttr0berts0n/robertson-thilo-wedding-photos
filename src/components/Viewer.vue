@@ -1,37 +1,46 @@
 <script setup lang="ts">
-import {computed, ref, useTemplateRef, watch} from 'vue';
-import { useFetchImages } from '../composables/fetchImages';
-const {viewerImage, images} = useFetchImages();
-const closeButton = useTemplateRef<HTMLButtonElement>('close-button')
+import { computed, useTemplateRef, watch } from 'vue';
+import { usePhotoUploads } from '../composables/usePhotoUploads';
+const { viewerImage, photoUploads } = usePhotoUploads();
+const closeButton = useTemplateRef<HTMLButtonElement>('close-button');
 const seek = (offset: number) => {
-    const current = images.value.indexOf(viewerImage.value);
+    const current = photoUploads.value.findIndex((el) => {
+        return el.photo.asset.url === viewerImage.value;
+    });
     if (current === -1) return;
-    const target = images.value.at((current + offset) % images.value.length);
+    const target = photoUploads.value.at(
+        (current + offset) % photoUploads.value.length
+    );
     if (!target) return;
-    viewerImage.value = target;
-}
+    viewerImage.value = target.photo.asset.url;
+};
 const open = computed(() => {
-    return viewerImage.value && images.value.indexOf(viewerImage.value) !== -1
+    return viewerImage.value;
 });
 
-const close = () => viewerImage.value = '';
+const close = () => (viewerImage.value = '');
 
 watch(open, () => {
     if (!open) return;
-        setTimeout(() => {
-            if (!closeButton.value) return;
-            closeButton.value.focus();
-        }, 0)
-})
-
+    setTimeout(() => {
+        if (!closeButton.value) return;
+        closeButton.value.focus();
+    }, 0);
+});
 </script>
 
 <template>
     <section>
-        <div class="container" v-show="open" @keyup.left="seek(-1)" @keyup.right="seek(1)" @keyup.escape.delete="close()">
+        <div
+            class="container"
+            v-show="open"
+            @keyup.left="seek(-1)"
+            @keyup.right="seek(1)"
+            @keyup.escape.delete="close()"
+        >
             <div class="wrapper">
                 <div class="image-wrapper">
-                    <img :src="viewerImage" alt="">
+                    <img v-if="open" :src="viewerImage" alt="" />
                 </div>
                 <div class="controls">
                     <button @click="seek(-1)">Prev</button>
@@ -48,9 +57,9 @@ watch(open, () => {
     position: absolute;
     position: fixed;
     inset: 0;
-    background-color: rgba(0,0,0, 0.9);
+    background-color: rgba(0, 0, 0, 0.9);
 }
-.wrapper   {
+.wrapper {
     position: absolute;
     inset: 1rem;
     display: flex;
@@ -67,7 +76,7 @@ watch(open, () => {
 }
 
 img {
-    border: 1rem solid rgba(255,255,255,0.8);
+    border: 1rem solid rgba(255, 255, 255, 0.8);
     border-radius: 0.5rem;
     width: 100%;
     height: auto;
@@ -79,7 +88,7 @@ img {
 }
 
 button {
-    font-family: "Fraunces", Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-family: 'Fraunces', Arial, 'Helvetica Neue', Helvetica, sans-serif;
     font-weight: bold;
     font-style: italic;
     font-size: 1.25rem;
