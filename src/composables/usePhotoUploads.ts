@@ -34,7 +34,7 @@ const photoQuerySchema = z.array(photoSchema);
 export type PhotoQuerySchema = z.infer<typeof photoQuerySchema>;
 
 const photosQuery = `
-*[_type == "photo_upload" && show != false]{
+*[_type == "photo_upload" && show != false] | order(_createdAt desc) {
   photo{
     caption,
     attribution,
@@ -54,7 +54,7 @@ const photosQuery = `
 
 const getPhotoById = (id: string) => {
     return `
-   *[_type == "photo_upload" && show != false && _id=="${id}"]{
+   *[_type == "photo_upload" && show != false && _id=="${id}"] | order(_createdAt desc) {
      photo{
        caption,
        attribution,
