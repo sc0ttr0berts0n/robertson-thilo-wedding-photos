@@ -30,29 +30,31 @@ watch(open, () => {
 </script>
 
 <template>
-    <section>
-        <div
-            class="container"
-            v-show="open"
-            @keyup.left="seek(-1)"
-            @keyup.right="seek(1)"
-            @keyup.escape.delete="close()"
-        >
-            <div class="wrapper">
-                <div class="image-wrapper">
-                    <img v-if="open" :src="viewerImage" alt="" />
-                </div>
-                <div class="controls">
-                    <button @click="seek(-1)">Prev</button>
-                    <button @click="close()" ref="close-button">Close</button>
-                    <button @click="seek(1)">Next</button>
-                </div>
+    <section
+        class="container"
+        v-show="open"
+        @keyup.left="seek(-1)"
+        @keyup.right="seek(1)"
+        @keyup.escape.delete="close()"
+    >
+        <div class="wrapper">
+            <div class="image-wrapper">
+                <img v-if="open" :src="viewerImage" alt="" />
+            </div>
+            <div class="controls">
+                <button @click.prevent="seek(-1)">Prev</button>
+                <button @click.prevent="close()" ref="close-button">
+                    Close
+                </button>
+                <button @click.prevent="seek(1)">Next</button>
             </div>
         </div>
     </section>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
+$controls-height: 4rem;
+
 .container {
     position: absolute;
     position: fixed;
@@ -61,25 +63,27 @@ watch(open, () => {
 }
 .wrapper {
     position: absolute;
-    inset: 1rem;
+    inset: 0rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 1rem;
 }
 
 .image-wrapper {
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    max-height: calc(100% - #{$controls-height} - 1rem);
+    align-self: center;
 }
 
 img {
-    border: 1rem solid rgba(255, 255, 255, 0.8);
     border-radius: 0.5rem;
-    width: 100%;
+    border: 1rem solid rgba(255, 255, 255, 0.8);
+    width: auto;
     height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .controls {
@@ -88,6 +92,7 @@ img {
 }
 
 button {
+    display: block;
     font-family: 'Fraunces', Arial, 'Helvetica Neue', Helvetica, sans-serif;
     font-weight: bold;
     font-style: italic;
@@ -97,7 +102,7 @@ button {
     border: 0;
     border-radius: 1rem;
     height: 4rem;
-    width: 4rem;
+    min-width: 4rem;
     cursor: pointer;
 }
 button:hover {
