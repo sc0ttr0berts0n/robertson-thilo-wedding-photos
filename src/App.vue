@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import PhotoGallery from './components/PhotoGallery.vue';
 import Uploader from './components/Uploader.vue';
 import Viewer from './components/Viewer.vue';
