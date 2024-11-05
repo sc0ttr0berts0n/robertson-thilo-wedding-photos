@@ -36,6 +36,9 @@ const status = computed(() => {
 </template>
 
 <style scoped>
+section {
+    width: 100%;
+}
 .photos {
     display: flex;
     flex-wrap: wrap;
@@ -60,7 +63,9 @@ const status = computed(() => {
 
 .status {
     font-family: monospace;
-    text-align-last: left;
-    white-space: pre;
+    text-align: left;
+    white-space: pre-line;
+    max-width: 100%;
+    overflow: scroll;
 }
 </style>
