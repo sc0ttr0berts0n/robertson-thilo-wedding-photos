@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ObservablePhoto from './ObservablePhoto.vue';
 import { computed } from 'vue';
 import { usePhotoUploads } from '../composables/usePhotoUploads.ts';
 const { viewerImage, photoUploads, loading, error } = usePhotoUploads();
@@ -23,14 +24,13 @@ const status = computed(() => {
         <h2>Gallery</h2>
         <div class="status">{{ status }}</div>
         <div class="photos">
-            <button
+            <ObservablePhoto
                 @click="onImageClick(photo.photo.asset.url)"
-                class="photo-wrapper"
-                v-for="photo in photoUploads"
-                :key="photo.photo.asset.url"
-            >
-                <img class="photo" :src="photo.photo.asset.url" alt="" />
-            </button>
+                v-for="(photo, index) in photoUploads"
+                :key="index"
+                :src="photo.photo.asset.url"
+                :lqsrc="photo.photo.asset.metadata.lqip"
+            />
         </div>
     </section>
 </template>
@@ -43,22 +43,6 @@ section {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-}
-
-.photo-wrapper {
-    font-size: 0;
-    border: 0;
-    padding: 0;
-    background-color: transparent;
-}
-
-.photo {
-    border-radius: 0.25rem;
-    object-fit: cover;
-    object-position: center;
-    width: calc(25cqw - 3 * 0.25rem);
-    height: calc(25cqw - 3 * 0.25rem);
-    cursor: pointer;
 }
 
 .status {

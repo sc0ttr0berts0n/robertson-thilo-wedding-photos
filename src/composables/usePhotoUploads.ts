@@ -22,6 +22,7 @@ const photoSchema = z.object({
                     width: z.number(),
                     height: z.number(),
                 }),
+                lqip: z.string(),
             }),
             url: z.string(),
         }),
@@ -41,6 +42,7 @@ const photosQuery = `
     asset->{
       url,
       metadata {
+        lqip,
         dimensions {
           width,
           height
@@ -61,6 +63,7 @@ const getPhotoById = (id: string) => {
        asset->{
          url,
          metadata {
+        lqip,
            dimensions {
              width,
              height
