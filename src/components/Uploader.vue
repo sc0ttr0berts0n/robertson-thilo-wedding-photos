@@ -56,7 +56,7 @@ const addFiles = async (files: FileList) => {
 
         reader.readAsDataURL(bestFile); // Read file as a data URL for the preview
 
-        uploadFileToSanity(bestFile);
+        await uploadFileToSanity(bestFile);
     }
 };
 
