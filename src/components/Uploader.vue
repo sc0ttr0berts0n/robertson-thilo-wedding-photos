@@ -18,18 +18,18 @@ const handleDragLeave = () => {
     isDragging.value = false;
 };
 
-const handleDrop = (event: DragEvent) => {
+const handleDrop = async (event: DragEvent) => {
     isDragging.value = false;
     if (event.dataTransfer?.files) {
-        addFiles(event.dataTransfer.files);
+        await addFiles(event.dataTransfer.files);
     }
 };
 
 // Handle file input change
-const handleFileChange = (event: Event) => {
+const handleFileChange = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (target.files) {
-        addFiles(target.files);
+        await addFiles(target.files);
     }
 };
 
